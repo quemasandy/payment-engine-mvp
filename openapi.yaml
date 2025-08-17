@@ -1,0 +1,85 @@
+openapi: 3.1.0
+info:
+  title: Payment Engine Lite
+  version: 0.1.0
+servers:
+  - url: http://localhost:3000
+paths:
+  /payments:
+    post:
+      summary: Create a payment (authorize/capture)
+      parameters:
+        - in: query
+          name: mode
+          schema: { type: string, enum: [sync, async], default: async }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        '201': { description: Created }
+        '202': { description: Accepted }
+        '409': { description: Idempotency hit }
+        '422': { description: Validation error }
+  /payments/{id}:
+    get:
+      summary: Get a payment status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Found }
+        '404': { description: Not found }
+  /refunds:
+    post:
+      summary: Create a refund
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRefundRequest'
+      responses:
+        '201': { description: Refund complete (sync) }
+        '202': { description: Refund accepted (async) }
+  /webhooks/gateway:
+    post:
+      summary: Receive gateway callbacks (simulados/mock)
+      responses:
+        '204': { description: Acknowledged }
+components:
+  schemas:
+    Token:
+      type: object
+      properties:
+        type: { type: string, enum: [network, vault] }
+        token: { type: string }
+        brand: { type: string }
+        last4: { type: string }
+        expMonth: { type: integer }
+        expYear: { type: integer }
+    CreatePaymentRequest:
+      type: object
+      required: [originId, idempotencyKey, amount, currency, orderId, token]
+      properties:
+        originId: { type: string }
+        idempotencyKey: { type: string }
+        amount: { type: integer, description: "minor units" }
+        currency: { type: string }
+        orderId: { type: string }
+        capture: { type: boolean, default: false }
+        token: { $ref: '#/components/schemas/Token' }
+        metadata: { type: object, additionalProperties: true }
+    CreateRefundRequest:
+      type: object
+      required: [originId, idempotencyKey, paymentId, amount]
+      properties:
+        originId: { type: string }
+        idempotencyKey: { type: string }
+        paymentId: { type: string }
+        amount: { type: integer }
+        metadata: { type: object }

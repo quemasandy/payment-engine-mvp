@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "declaration": true,
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@domain/*": ["packages/domain/src/*"],
+      "@ports/*": ["packages/ports/src/*"],
+      "@adapters/*": ["packages/adapters/*"],
+      "@gateways/*": ["packages/gateways/*"],
+      "@lib/*": ["packages/lib/src/*"]
+    },
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  }
+}
