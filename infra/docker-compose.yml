@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  api:
+    image: node:20
+    working_dir: /app
+    command: bash -lc "npm i && npm run dev:api"
+    ports: ["3000:3000"]
+    environment:
+      SERVICE_NAME: api
+      DD_ENV: dev
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://dd-agent:4318/v1/traces
+      OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: http://dd-agent:4318/v1/metrics
+    volumes:
+      - ../:/app
+    depends_on: [dd-agent]
+  workers:
+    image: node:20
+    working_dir: /app
+    command: bash -lc "npm i && npm run dev:workers"
+    environment:
+      SERVICE_NAME: workers
+      DD_ENV: dev
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://dd-agent:4318/v1/traces
+      OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: http://dd-agent:4318/v1/metrics
+    volumes:
+      - ../:/app
+    depends_on: [dd-agent]
+  dd-agent:
+    image: gcr.io/datadoghq/agent:latest
+    environment:
+      DD_SITE: datadoghq.com
+      DD_API_KEY: ${DD_API_KEY:-invalid}
+      DD_LOGS_ENABLED: "true"
+      DD_APM_ENABLED: "true"
+      DD_DOGSTATSD_NON_LOCAL_TRAFFIC: "true"
+    ports: ["8126:8126", "4317:4317", "4318:4318"]
